@@ -2,6 +2,7 @@ import 'package:audio_player/models/song.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
+import '../audio_player.dart';
 import '../utils.dart';
 
 class Player extends StatefulWidget {
@@ -14,14 +15,13 @@ class Player extends StatefulWidget {
 }
 
 class _PlayerState extends State<Player> {
-  AudioPlayer audioPlayer = AudioPlayer();
+  CustomAudioPlayer audioPlayer = CustomAudioPlayer();
   late List<Song> songs;
   late Song selectedSong;
   bool isShuffleEnabled = false;
   bool isUpdatingSeek = false;
-  int repeatIconCode = 0;
+  int repeatState = 0;
   int seek = 0;
-  int length = 0;
 
   bool get isHttpResource {
     return Utils.isPathHttpUrl(selectedSong.path);
@@ -29,9 +29,9 @@ class _PlayerState extends State<Player> {
 
   IconData get repeatIcon {
     IconData repeatIcon = Icons.repeat;
-    if (repeatIconCode == 1) {
+    if (repeatState == 1) {
       repeatIcon = Icons.repeat_one;
-    } else if (repeatIconCode == 2) {
+    } else if (repeatState == 2) {
       repeatIcon = Icons.repeat_on;
     }
     return repeatIcon;
@@ -44,25 +44,26 @@ class _PlayerState extends State<Player> {
     songs = List.from(widget.songs);
 
     audioPlayer.onPositionChanged.listen((duration) {
-      if (!isUpdatingSeek && !isHttpResource) {
+      if (!isUpdatingSeek && !isHttpResource && mounted) {
         setState(() => seek = duration.inSeconds);
       }
     });
     audioPlayer.onPlayerComplete.listen((_) {
-      if (repeatIconCode == 2) {
+      if (repeatState == 2 && mounted) {
         skipToSong(1);
       }
     });
-    audioPlayer.onDurationChanged.listen((duration) {
-      setState(() => length = duration.inSeconds);
+    audioPlayer.onPlayerStateChanged.listen((playerState) {
+      if (mounted) {
+        setState(() {});
+      }
     });
-    audioPlayer.onPlayerStateChanged.listen((playerState) => setState(() {}));
 
     playSong();
   }
 
-  handleRepeatIconClick() async {
-    final code = ++repeatIconCode % 3;
+  void handleRepeatIconClick() async {
+    final code = (repeatState + 1) % 3;
     if (code == 0) {
       await audioPlayer.setReleaseMode(ReleaseMode.stop);
     } else if (code == 1) {
@@ -70,20 +71,19 @@ class _PlayerState extends State<Player> {
     } else if (code == 2) {
       await audioPlayer.setReleaseMode(ReleaseMode.release);
     }
-    setState(() => repeatIconCode = code);
+    setState(() => repeatState = code);
   }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      theme: ThemeData.light(useMaterial3: true),
       home: Scaffold(
         appBar: AppBar(
           leading: IconButton(
-              onPressed: () async {
-                await audioPlayer.setReleaseMode(ReleaseMode.release);
-                audioPlayer
-                    .release()
-                    .then((value) => Navigator.pop(context, selectedSong.id));
+              onPressed: () {
+                Navigator.pop(context,
+                    {"selectedSong": selectedSong, "audioPlayer": audioPlayer});
               },
               icon: const Icon(Icons.keyboard_arrow_down)),
           elevation: 0,
@@ -112,7 +112,7 @@ class _PlayerState extends State<Player> {
                         Expanded(
                           child: Slider(
                             min: 0,
-                            max: length.toDouble(),
+                            max: selectedSong.duration?.toDouble() ?? 0,
                             value: seek.toDouble(),
                             onChangeStart: (value) => isUpdatingSeek = true,
                             onChangeEnd: (value) {
@@ -127,7 +127,7 @@ class _PlayerState extends State<Player> {
                                   },
                           ),
                         ),
-                        Text(Utils.formatTime(length)),
+                        Text(Utils.formatTime(selectedSong.duration ?? 0)),
                       ],
                     ),
                   ),
@@ -183,19 +183,18 @@ class _PlayerState extends State<Player> {
   }
 
   skipToSong(int newIndex) async {
-    final song = Utils.getSong(songs, selectedSong.id, newIndex);
-    audioPlayer.play(DeviceFileSource(song.path));
+    // final song = Utils.getSong(songs, selectedSong.id, newIndex);
+    // audioPlayer.play(DeviceFileSource(song.path));
+    audioPlayer.skip(1);
   }
 
-  playSong() async {
-    if (audioPlayer.state == PlayerState.completed ||
-        audioPlayer.state == PlayerState.stopped) {
-      audioPlayer.play(DeviceFileSource(selectedSong.path));
-    } else if (audioPlayer.state == PlayerState.paused) {
-      audioPlayer.resume();
-    } else if (audioPlayer.state == PlayerState.playing) {
+  void playSong() async {
+    if (audioPlayer.state == PlayerState.playing) {
       audioPlayer.pause();
+    } else {
+      await audioPlayer.play(DeviceFileSource(selectedSong.path));
     }
+    setState(() {});
   }
 
   shuffleSongs() {

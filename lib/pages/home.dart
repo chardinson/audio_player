@@ -16,8 +16,59 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  List<Song> pickedSongs = [];
   List<Song> songs = [];
+  AudioPlayer audioPlayer = AudioPlayer(playerId: 'CHARDIN');
+  Song? selectedSong;
+  int seek = 0;
   TextEditingController textEditingController = TextEditingController();
+  String get currentSongName {
+    return selectedSong?.name ?? 'Name not found';
+  }
+
+  final _controller = TextEditingController();
+  bool _showSearch = false;
+  bool _showBackButton = false;
+
+  void _toggleSearch() {
+    setState(() {
+      _showSearch = !_showSearch;
+      _showBackButton = !_showBackButton;
+    });
+  }
+
+  void _goBack() {
+    setState(() {
+      _showSearch = false;
+      _showBackButton = false;
+      _controller.text = '';
+    });
+  }
+
+  get isSongSelected {
+    return selectedSong != null;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    audioPlayer.onPositionChanged.listen((duration) {
+      if (!isHttpResource) {
+        setState(() => seek = duration.inSeconds);
+      }
+    });
+    audioPlayer.onPlayerStateChanged.listen((playerState) => setState(() {}));
+
+    _controller.addListener(() {
+      setState(() {
+        songs = Utils.filterSongs(pickedSongs, _controller.text);
+      });
+    });
+  }
+
+  bool get isHttpResource {
+    return Utils.isPathHttpUrl(selectedSong?.path ?? '');
+  }
 
   String get radioUrl {
     return textEditingController.text.isEmpty
@@ -36,40 +87,106 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: generateAppBar(context),
-      resizeToAvoidBottomInset: true,
       body: Column(
         children: [
-          Column(
+          Expanded(
+            child: Column(
+              children: [
+                createHeader(),
+                Flexible(
+                  child: ListView.builder(
+                    itemCount: songs.length,
+                    itemBuilder: (context, index) {
+                      final song = songs[index];
+                      final isSelected = song.id == selectedSong?.id;
+                      return Column(
+                        children: [
+                          ListTile(
+                            leading: CircleAvatar(
+                                child: Icon(isSelected
+                                    ? Icons.play_arrow
+                                    : Icons.music_note)),
+                            onTap: () async {
+                              await audioPlayer
+                                  .play(DeviceFileSource(song.path));
+                              setState(() => selectedSong = song);
+                            },
+                            title: Text(
+                              song.name,
+                              style: TextStyle(
+                                  color:
+                                      isSelected ? Colors.green : Colors.black),
+                            ),
+                            trailing:
+                                Text(Utils.formatTime(song.duration ?? 0)),
+                          ),
+                          const Divider(
+                            thickness: 1,
+                            indent: 16,
+                            endIndent: 16,
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: InkWell(
+        onTap: navigateToPlayer,
+        child: BottomAppBar(
+          child: Row(
             children: [
-              createHeader(),
-              ListView.builder(
-                scrollDirection: Axis.vertical,
-                shrinkWrap: true,
-                itemCount: songs.length,
-                itemBuilder: (context, index) {
-                  return Column(
-                    children: [
-                      ListTile(
-                        leading:
-                            const CircleAvatar(child: Icon(Icons.music_note)),
-                        onTap: () {
-                          navigateToPlayer(songs[index]);
-                        },
-                        title: Text(songs[index].name),
-                      ),
-                      const Divider(
-                        thickness: 1,
-                        indent: 24,
-                        endIndent: 24,
-                      ),
-                    ],
-                  );
-                },
+              CircleAvatar(
+                child: Icon(isHttpResource ? Icons.radio : Icons.music_note),
+              ),
+              const SizedBox(width: 16.0),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        GestureDetector(
+                          child: Text(currentSongName),
+                        ),
+                        Row(
+                          children: [
+                            IconButton(
+                              onPressed: () {
+                                if (audioPlayer.state == PlayerState.playing) {
+                                  audioPlayer.pause();
+                                } else {
+                                  audioPlayer.resume();
+                                }
+                              },
+                              icon: Icon(
+                                  audioPlayer.state == PlayerState.playing
+                                      ? Icons.pause
+                                      : Icons.play_arrow),
+                            ),
+                            IconButton(
+                                onPressed: playRandomSong,
+                                icon: const Icon(Icons.skip_next))
+                          ],
+                        ),
+                      ],
+                    ),
+                    isHttpResource
+                        ? Container()
+                        : LinearProgressIndicator(
+                            value: (seek / (selectedSong?.duration ?? 1)),
+                          ),
+                  ],
+                ),
               ),
             ],
           ),
-          player()
-        ],
+        ),
       ),
     );
   }
@@ -88,118 +205,86 @@ class _HomeState extends State<Home> {
 
   AppBar generateAppBar(BuildContext context) {
     return AppBar(
-      title: const Text('Music'),
-      actions: [
-        IconButton(
-          onPressed: () {
-            showDialog(
-                barrierDismissible: false,
-                context: context,
-                builder: (context) => AlertDialog(
-                      title: const Text('Set your url'),
-                      content: SingleChildScrollView(
-                        child: TextField(
-                          controller: textEditingController,
-                        ),
-                      ),
-                      actions: [
-                        TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text('Cancel')),
-                        TextButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                              navigateToPlayer(
-                                  Song(const Uuid().v4(), 'Radio', radioUrl));
-                            },
-                            child: const Text('Play')),
-                      ],
-                    ));
-          },
-          icon: const Icon(Icons.radio),
-          tooltip: 'Url',
-        ),
-        IconButton(
-          onPressed: pickFiles,
-          icon: const Icon(Icons.library_music),
-          tooltip: 'Pick Music',
-        ),
-      ],
+      title: _showSearch
+          ? TextFormField(
+              autofocus: true,
+              controller: _controller,
+              decoration: InputDecoration(
+                  border: InputBorder.none,
+                  suffixIcon: IconButton(
+                      onPressed: _controller.clear,
+                      icon: const Icon(Icons.clear))),
+            )
+          : const Text('My App'),
+      leading: _showBackButton
+          ? IconButton(
+              onPressed: _goBack,
+              icon: const Icon(Icons.arrow_back),
+            )
+          : null,
+      actions: _showSearch
+          ? null
+          : [
+              IconButton(
+                  onPressed: (_toggleSearch), icon: const Icon(Icons.search)),
+              IconButton(
+                onPressed: () {
+                  showDialog(
+                      barrierDismissible: false,
+                      context: context,
+                      builder: (context) => AlertDialog(
+                            title: const Text('Set your url'),
+                            content: SingleChildScrollView(
+                              child: TextField(
+                                controller: textEditingController,
+                              ),
+                            ),
+                            actions: [
+                              OutlinedButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text('Cancel')),
+                              FilledButton(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                    navigateToPlayer(Song(
+                                        const Uuid().v4(), 'Radio', radioUrl));
+                                  },
+                                  child: const Text('Play')),
+                            ],
+                          ));
+                },
+                icon: const Icon(Icons.radio),
+                tooltip: 'Url',
+              ),
+              IconButton(
+                onPressed: pickFiles,
+                icon: const Icon(Icons.library_music),
+                tooltip: 'Pick Music',
+              ),
+            ],
     );
   }
 
-  void navigateToPlayer(Song song) {
-    Navigator.push(
+  void navigateToPlayer([Song? song]) async {
+    final result = await Navigator.push(
         context,
         MaterialPageRoute(
             builder: (context) => Player(
-                  songToPlay: song,
+                  songToPlay: song ?? selectedSong!,
                   songs: songs,
-                ))).then((value) {
-      AudioPlayer().play(DeviceFileSource(
-          songs.firstWhere((element) => element.id == value).path));
+                )));
+    setState(() {
+      selectedSong = result['selectedSong'];
+      audioPlayer = result['audioPlayer'];
     });
   }
 
   void pickFiles() {
     Utils.pickSongs().then((songs) {
-      List<Song> s = List.from(songs);
-      s.addAll(songs);
-      s.addAll(songs);
-      s.addAll(songs);
-      s.addAll(songs);
-      setState(() => this.songs = s);
+      setState(() {
+        pickedSongs = songs;
+        this.songs = List.from(songs);
+      });
     });
-  }
-
-  player() {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey),
-        borderRadius: const BorderRadius.all(Radius.circular(8)),
-      ),
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      padding: const EdgeInsets.symmetric(horizontal: 6),
-      child: Column(
-        children: [
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Row(
-              children: [
-                const Image(
-                  image: NetworkImage(
-                      'https://img.freepik.com/free-vector/musical-notes-frame-with-text-space_1017-32857.jpg'),
-                  height: 60,
-                  width: 40,
-                ),
-                const SizedBox(
-                  width: 8,
-                ),
-                Column(
-                  children: const [
-                    Text('Descender - 2015'),
-                    Text('Case & Point'),
-                  ],
-                ),
-              ],
-            ),
-            Row(
-              children: const [
-                Icon(Icons.radio),
-                SizedBox(width: 6),
-                Icon(Icons.favorite),
-                SizedBox(width: 6),
-                Icon(Icons.play_arrow)
-              ],
-            )
-          ]),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 4),
-            child: LinearProgressIndicator(
-              value: 0.1,
-            ),
-          )
-        ],
-      ),
-    );
   }
 }
