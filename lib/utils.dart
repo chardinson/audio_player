@@ -1,33 +1,15 @@
-import 'dart:math';
-
+import 'package:audio_player/widgets/url_input.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
+import 'custom_audio_player.dart';
 import 'models/song.dart';
 
 class Utils {
-  static bool isPathHttpUrl(String path) {
-    return path.startsWith('http');
-  }
-
-  static shuffle(List<dynamic> list) {
-    List<dynamic> listToShuffle = List.from(list);
-    for (int i = listToShuffle.length - 1; i > 0; i--) {
-      final j = Random().nextInt(i + 1);
-      final temp = listToShuffle[i];
-      listToShuffle[i] = listToShuffle[j];
-      listToShuffle[j] = temp;
-    }
-    return listToShuffle;
-  }
-
-  static Song getSong(
-      List<dynamic> elements, String elementId, int indexToNavigate) {
-    final index = elements.indexWhere((song) => song.id == elementId);
-    final length = elements.length;
-
-    return elements[((index + indexToNavigate) % length + length) % length];
-  }
+  static final AudioPlayer audioPlayer =
+      AudioPlayer(playerId: 'AudioPlayerLoader');
 
   static String formatTime(int seconds) {
     final time = '${Duration(seconds: seconds)}'.split('.')[0];
@@ -35,16 +17,37 @@ class Utils {
   }
 
   static Future<List<Song>> pickSongs() async {
+    List<Song> songs = [];
+    final regExp = RegExp(r'\.[^.]*$');
+
     final filePickerResult = await FilePicker.platform.pickFiles(
       type: FileType.audio,
       allowMultiple: true,
     );
+    for (final platformFile in (filePickerResult?.files ?? [])) {
+      final name = platformFile.name.replaceFirst(regExp, '');
+      final path = platformFile.path!;
+      await audioPlayer.setSourceDeviceFile(path);
+      final duration = await audioPlayer.getDuration();
+      songs.add(Song(
+        id: const Uuid().v4(),
+        name: name,
+        path: path,
+        duration: duration!.inSeconds,
+      ));
+    }
+    return songs;
+  }
 
-    return (filePickerResult?.files ?? [])
-        .map((platformFile) => Song(
-            const Uuid().v4(),
-            platformFile.name.replaceFirst(RegExp(r'\.[^.]*$'), ''),
-            platformFile.path!))
-        .toList();
+  static showUrlInput(BuildContext context) async {
+    final Song? song = await showDialog(
+      context: context,
+      builder: (context) => const UrlInput(),
+    );
+    if (song != null) {
+      final CustomAudioPlayer audioPlayer = CustomAudioPlayer();
+      audioPlayer.currentAudio = song;
+      audioPlayer.play(UrlSource(song.path));
+    }
   }
 }

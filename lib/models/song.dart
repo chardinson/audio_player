@@ -1,6 +1,11 @@
-class Song {
-  String id;
-  String name;
-  String path;
-  Song(this.id, this.name, this.path);
+import 'package:audio_player/models/audio.dart';
+
+class Song extends Audio {
+  Song(
+      {super.id,
+      super.name,
+      required super.path,
+      super.duration,
+      super.homePage,
+      super.thumbnail});
 }
