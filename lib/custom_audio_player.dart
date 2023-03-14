@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:audioplayers/audioplayers.dart';
 
+import 'global_enums.dart';
 import 'models/audio.dart';
 
 class CustomAudioPlayer extends AudioPlayer {
@@ -115,8 +116,8 @@ class CustomAudioPlayer extends AudioPlayer {
           ctx: ctx,
           position: position,
           mode: mode);
-      fetchState = FetchState.loaded;
-      _onFetchDataController.add(FetchState.loaded);
+      fetchState = FetchState.success;
+      _onFetchDataController.add(FetchState.success);
     } catch (error) {
       fetchState = FetchState.error;
       _onFetchDataController.addError(error);
@@ -145,5 +146,3 @@ class CustomAudioPlayer extends AudioPlayer {
 }
 
 enum LoopMode { off, one, all }
-
-enum FetchState { none, loading, loaded, error }

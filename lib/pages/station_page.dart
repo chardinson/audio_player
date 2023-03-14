@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 import '../api.dart';
+import '../global_enums.dart';
 import '../models/station.dart';
 
 class StationPage extends StatefulWidget {
@@ -24,21 +25,89 @@ class StationPage extends StatefulWidget {
 
 class _StationPageState extends State<StationPage> {
   final CustomAudioPlayer _audioPlayer = CustomAudioPlayer();
-  bool isFetchingStations = true;
-  List<Station> stations = [];
-
   late StreamSubscription<PlayerState> _onPlayerStateChangedSubscription;
+  List<Station> _stations = [];
+  FetchState _fetchState = FetchState.none;
+
+  set fetchState(value) {
+    if (mounted) {
+      setState(() {});
+    }
+    _fetchState = value;
+  }
+
+  get fetchState => _fetchState;
+
+  get body {
+    Widget body = ListView.builder(
+      itemCount: _stations.length,
+      itemBuilder: (context, index) {
+        Station station = _stations[index];
+        final isSelected = station.id == _audioPlayer.currentAudio?.id;
+        return Column(
+          children: [
+            ListTile(
+              leading: CircleAvatar(
+                  child: isSelected
+                      ? const Icon(Icons.play_arrow)
+                      : CachedNetworkImage(
+                          imageUrl: station.thumbnail!,
+                          placeholder: (context, url) => SpinKitDoubleBounce(
+                              color: Theme.of(context).primaryColor),
+                          errorWidget: (context, url, error) =>
+                              const Icon(Icons.radio),
+                        )),
+              title: Text(station.name,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                      color: isSelected
+                          ? Theme.of(context).primaryColor
+                          : Colors.black)),
+              subtitle: Text(station.state,
+                  style: TextStyle(
+                      color: isSelected
+                          ? Theme.of(context).primaryColor
+                          : Colors.black)),
+              onTap: () {
+                _audioPlayer.audios = _stations;
+                setState(() {
+                  _audioPlayer.currentAudio = station;
+                });
+                _audioPlayer.play(UrlSource(station.path));
+              },
+            ),
+          ],
+        );
+      },
+    );
+    if (_fetchState == FetchState.loading) {
+      body = Center(
+        child: SpinKitSpinningLines(
+          color: Theme.of(context).primaryColor,
+          lineWidth: 6,
+          size: 180,
+        ),
+      );
+    } else if (_fetchState == FetchState.error) {
+      body = Center(
+        child: FractionallySizedBox(
+          widthFactor: 0.3,
+          heightFactor: 0.2,
+          child: FittedBox(
+              child: IconButton(
+            icon: const Icon(Icons.sync_problem),
+            onPressed: fetchStations,
+          )),
+        ),
+      );
+    }
+    return body;
+  }
 
   @override
   void initState() {
     super.initState();
-    Api.getStations(widget.countryIsoCode).then((stations) {
-      this.stations = stations;
-    }).whenComplete(() {
-      if (mounted) {
-        setState(() => isFetchingStations = false);
-      }
-    });
+    fetchStations();
 
     _onPlayerStateChangedSubscription =
         _audioPlayer.onPlayerStateChanged.listen((_) {
@@ -59,56 +128,7 @@ class _StationPageState extends State<StationPage> {
           ),
         ],
       ),
-      body: isFetchingStations
-          ? Center(
-              child: SpinKitSpinningLines(
-              color: Theme.of(context).primaryColor,
-              lineWidth: 6,
-              size: 180,
-            ))
-          : ListView.builder(
-              itemCount: stations.length,
-              itemBuilder: (context, index) {
-                Station station = stations[index];
-                final isSelected = station.id == _audioPlayer.currentAudio?.id;
-                return Column(
-                  children: [
-                    ListTile(
-                      leading: CircleAvatar(
-                          child: isSelected
-                              ? const Icon(Icons.play_arrow)
-                              : CachedNetworkImage(
-                                  imageUrl: station.thumbnail!,
-                                  placeholder: (context, url) =>
-                                      SpinKitDoubleBounce(
-                                          color:
-                                              Theme.of(context).primaryColor),
-                                  errorWidget: (context, url, error) =>
-                                      const Icon(Icons.radio),
-                                )),
-                      title: Text(station.name,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                              color: isSelected
-                                  ? Theme.of(context).primaryColor
-                                  : Colors.black)),
-                      subtitle: Text(station.state,
-                          style: TextStyle(
-                              color: isSelected
-                                  ? Theme.of(context).primaryColor
-                                  : Colors.black)),
-                      onTap: () {
-                        _audioPlayer.audios = stations;
-                        setState(() {
-                          _audioPlayer.currentAudio = station;
-                        });
-                        _audioPlayer.play(UrlSource(station.path));
-                      },
-                    ),
-                  ],
-                );
-              },
-            ),
+      body: body,
       bottomNavigationBar: _audioPlayer.currentAudio == null
           ? const SizedBox()
           : CompactPlayerController(
@@ -129,11 +149,25 @@ class _StationPageState extends State<StationPage> {
 
   handleSearch(String searchTerm) {
     setState(() {
-      stations = Cache.stations[widget.countryIsoCode]!
+      _stations = Cache.stations[widget.countryIsoCode]!
           .where((station) =>
               RegExp(searchTerm, caseSensitive: false).hasMatch(station.name) ||
               RegExp(searchTerm, caseSensitive: false).hasMatch(station.state))
           .toList();
     });
+  }
+
+  void fetchStations() async {
+    FetchState previousFetchState = fetchState;
+    try {
+      fetchState = FetchState.loading;
+      if (previousFetchState == FetchState.error) {
+        await Future.delayed(const Duration(seconds: 1));
+      }
+      _stations = await Api.getStations(widget.countryIsoCode);
+      fetchState = FetchState.success;
+    } catch (e) {
+      fetchState = FetchState.error;
+    }
   }
 }

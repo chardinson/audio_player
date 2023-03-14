@@ -1,12 +1,10 @@
-import 'dart:async';
-
 import 'package:audio_player/api.dart';
 import 'package:audio_player/pages/station_page.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
+import '../global_enums.dart';
 import '../models/cache.dart';
 import '../models/country.dart';
 import '../utils.dart';
@@ -20,15 +18,8 @@ class CountryPage extends StatefulWidget {
   State<CountryPage> createState() => _CountryPageState();
 }
 
-enum FetchState { none, loading, success, error }
-
 class _CountryPageState extends State<CountryPage> {
   List<Country> _countries = [];
-  final Connectivity _connectivity = Connectivity();
-  late StreamSubscription<ConnectivityResult>
-      _onConnectivityChangedSubscription;
-  ScaffoldFeatureController? _scaffoldFeatureController;
-
   FetchState _fetchState = FetchState.none;
 
   set fetchState(value) {
@@ -54,7 +45,8 @@ class _CountryPageState extends State<CountryPage> {
                 imageUrl: country.imageUrl!,
                 placeholder: (context, url) =>
                     SpinKitDoubleBounce(color: Theme.of(context).primaryColor),
-                errorWidget: (context, url, error) => const Icon(Icons.error),
+                errorWidget: (context, url, error) =>
+                    const Icon(Icons.broken_image),
               )),
               title: Text(country.name),
               onTap: () => Navigator.push(
@@ -72,13 +64,24 @@ class _CountryPageState extends State<CountryPage> {
     );
     if (_fetchState == FetchState.loading) {
       body = Center(
-          child: SpinKitSpinningLines(
-        color: Theme.of(context).primaryColor,
-        lineWidth: 6,
-        size: 180,
-      ));
+        child: SpinKitSpinningLines(
+          color: Theme.of(context).primaryColor,
+          lineWidth: 6,
+          size: 180,
+        ),
+      );
     } else if (_fetchState == FetchState.error) {
-      body = const Center(child: Icon(Icons.error));
+      body = Center(
+        child: FractionallySizedBox(
+          widthFactor: 0.3,
+          heightFactor: 0.2,
+          child: FittedBox(
+              child: IconButton(
+            icon: const Icon(Icons.sync_problem),
+            onPressed: fetchCountries,
+          )),
+        ),
+      );
     }
     return body;
   }
@@ -87,61 +90,33 @@ class _CountryPageState extends State<CountryPage> {
   void initState() {
     super.initState();
     fetchCountries();
-
-    _connectivity.checkConnectivity().then(resolveConnectivityStatus);
-
-    _onConnectivityChangedSubscription =
-        _connectivity.onConnectivityChanged.listen(resolveConnectivityStatus);
-  }
-
-  void resolveConnectivityStatus(connectivityResult) {
-    if (connectivityResult == ConnectivityResult.wifi ||
-        connectivityResult == ConnectivityResult.mobile) {
-      _scaffoldFeatureController?.close();
-      if (_fetchState == FetchState.error) {
-        fetchCountries();
-      }
-    } else if (connectivityResult == ConnectivityResult.none) {
-      _scaffoldFeatureController =
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Sin conexión', textAlign: TextAlign.center),
-        duration: Duration(days: 1),
-      ));
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(
-        onSearch: handleSearch,
-        customActions: [
-          IconButton(
-            onPressed: () => Utils.showUrlInput(context),
-            icon: const Icon(Icons.link),
-            tooltip: 'Set url',
-          ),
-          IconButton(
-            onPressed: () {
-              Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SongPage(),
-                  ));
-            },
-            icon: const Icon(Icons.library_music),
-            tooltip: 'Pick Music',
-          ),
-        ],
-      ),
-      body: body,
-    );
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    _onConnectivityChangedSubscription.cancel();
+        appBar: CustomAppBar(
+          onSearch: handleSearch,
+          customActions: [
+            IconButton(
+              onPressed: () => Utils.showUrlInput(context),
+              icon: const Icon(Icons.link),
+              tooltip: 'Set url',
+            ),
+            IconButton(
+              onPressed: () {
+                Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SongPage(),
+                    ));
+              },
+              icon: const Icon(Icons.library_music),
+              tooltip: 'Pick Music',
+            ),
+          ],
+        ),
+        body: body);
   }
 
   handleSearch(String searchTerm) {
@@ -152,9 +127,13 @@ class _CountryPageState extends State<CountryPage> {
     setState(() => _countries = countries);
   }
 
-  void fetchCountries() async {
+  Future<void> fetchCountries() async {
+    FetchState previousFetchState = fetchState;
     try {
       fetchState = FetchState.loading;
+      if (previousFetchState == FetchState.error) {
+        await Future.delayed(const Duration(seconds: 1));
+      }
       _countries = await Api.getCountries();
       fetchState = FetchState.success;
     } catch (e) {

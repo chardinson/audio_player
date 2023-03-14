@@ -11,7 +11,7 @@ class CustomAppBar extends AppBar {
 
 class _CustomAppBarState extends State<CustomAppBar> {
   TextEditingController textEditingController = TextEditingController();
-  final _controller = TextEditingController(text: 'dominican');
+  final _controller = TextEditingController();
   bool _showSearch = false;
   bool _showBackButton = false;
 

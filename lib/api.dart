@@ -21,7 +21,7 @@ class Api {
         return country;
       }).toList();
       countries.sort();
-      // Cache.countries = countries;
+      Cache.countries = countries;
     }
     return [...countries];
   }
