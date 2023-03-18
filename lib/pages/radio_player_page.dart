@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:audioplayers/audioplayers.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:marquee/marquee.dart';
@@ -93,9 +92,10 @@ class _RadioPlayerPageState extends State<RadioPlayerPage> {
                             ),
                           );
                         },
-                        child: CachedNetworkImage(
-                          imageUrl: _audioPlayer.currentAudio?.thumbnail ?? '',
-                          errorWidget: (context, url, error) => FittedBox(
+                        child: Image.network(
+                          _audioPlayer.currentAudio?.thumbnail ?? '',
+                          errorBuilder: (context, error, stackTrace) =>
+                              FittedBox(
                             child: Icon(
                               Icons.radio,
                               color: Theme.of(context).primaryColor,

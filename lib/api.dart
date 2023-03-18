@@ -17,7 +17,8 @@ class Api {
 
       countries = jsonDecode(response.body).map<Country>((e) {
         Country country = Country.fromJson(e);
-        country.imageUrl = 'https://countryflagsapi.com/png/${country.isoCode}';
+        country.imageUrl =
+            'assets/images/country_flags/size_56x42/${country.isoCode.toLowerCase()}.png';
         return country;
       }).toList();
       countries.sort();

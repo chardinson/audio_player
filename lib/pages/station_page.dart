@@ -7,7 +7,6 @@ import 'package:audio_player/utils.dart';
 import 'package:audio_player/widgets/compact_player_controller.dart';
 import 'package:audio_player/widgets/custom_app_bar.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
@@ -50,11 +49,9 @@ class _StationPageState extends State<StationPage> {
               leading: CircleAvatar(
                   child: isSelected
                       ? const Icon(Icons.play_arrow)
-                      : CachedNetworkImage(
-                          imageUrl: station.thumbnail!,
-                          placeholder: (context, url) => SpinKitDoubleBounce(
-                              color: Theme.of(context).primaryColor),
-                          errorWidget: (context, url, error) =>
+                      : Image.network(
+                          station.thumbnail!,
+                          errorBuilder: (context, error, stackTrace) =>
                               const Icon(Icons.radio),
                         )),
               title: Text(station.name,

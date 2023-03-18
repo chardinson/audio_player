@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:audio_player/custom_audio_player.dart';
 import 'package:audio_player/models/audio.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
@@ -55,13 +54,12 @@ class _CompactPlayerControllerState extends State<CompactPlayerController> {
         child: Row(
           children: [
             CircleAvatar(
-              child: CachedNetworkImage(
-                imageUrl: _audioPlayer.currentAudio?.thumbnail ?? '',
-                placeholder: (context, url) =>
-                    SpinKitDoubleBounce(color: Theme.of(context).primaryColor),
-                errorWidget: (context, url, error) => _audioPlayer.isUrlSource
-                    ? const Icon(Icons.radio)
-                    : const Icon(Icons.music_note),
+              child: Image.network(
+                _audioPlayer.currentAudio?.thumbnail ?? '',
+                errorBuilder: (context, error, stackTrace) =>
+                    _audioPlayer.isUrlSource
+                        ? const Icon(Icons.radio)
+                        : const Icon(Icons.music_note),
               ),
             ),
             const SizedBox(width: 16.0),

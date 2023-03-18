@@ -1,6 +1,5 @@
 import 'package:audio_player/api.dart';
 import 'package:audio_player/pages/station_page.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
@@ -41,11 +40,9 @@ class _CountryPageState extends State<CountryPage> {
           children: [
             ListTile(
               leading: CircleAvatar(
-                  child: CachedNetworkImage(
-                imageUrl: country.imageUrl!,
-                placeholder: (context, url) =>
-                    SpinKitDoubleBounce(color: Theme.of(context).primaryColor),
-                errorWidget: (context, url, error) =>
+                  child: Image.asset(
+                country.imageUrl!,
+                errorBuilder: (context, error, stackTrace) =>
                     const Icon(Icons.broken_image),
               )),
               title: Text(country.name),
