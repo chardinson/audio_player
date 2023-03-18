@@ -24,9 +24,11 @@ class StationPage extends StatefulWidget {
 
 class _StationPageState extends State<StationPage> {
   final CustomAudioPlayer _audioPlayer = CustomAudioPlayer();
+  final SearchBarController searchBarController = SearchBarController();
   late StreamSubscription<PlayerState> _onPlayerStateChangedSubscription;
   List<Station> _stations = [];
   FetchState _fetchState = FetchState.none;
+  bool _isSearchVisible = false;
 
   set fetchState(value) {
     if (mounted) {
@@ -114,27 +116,41 @@ class _StationPageState extends State<StationPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: CustomAppBar(
-        onSearch: handleSearch,
-        customActions: [
-          IconButton(
-            onPressed: () => Utils.showUrlInput(context),
-            icon: const Icon(Icons.link),
-            tooltip: 'Set url',
-          ),
-        ],
+    return WillPopScope(
+      onWillPop: () {
+        if (_isSearchVisible) {
+          searchBarController.toggleSearchBar();
+          setState(() => _isSearchVisible = false);
+
+          return Future(() => false);
+        }
+        return Future(() => true);
+      },
+      child: Scaffold(
+        appBar: CustomAppBar(
+          onSearch: handleSearch,
+          searchBarController: searchBarController,
+          onToggleSearch: (isSearchVisible) =>
+              _isSearchVisible = isSearchVisible,
+          customActions: [
+            IconButton(
+              onPressed: () => Utils.showUrlInput(context),
+              icon: const Icon(Icons.link),
+              tooltip: 'Set url',
+            ),
+          ],
+        ),
+        body: body,
+        bottomNavigationBar: _audioPlayer.currentAudio == null
+            ? const SizedBox()
+            : CompactPlayerController(
+                onTap: _audioPlayer.isUrlSource
+                    ? () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const RadioPlayerPage()))
+                    : null),
       ),
-      body: body,
-      bottomNavigationBar: _audioPlayer.currentAudio == null
-          ? const SizedBox()
-          : CompactPlayerController(
-              onTap: _audioPlayer.isUrlSource
-                  ? () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const RadioPlayerPage()))
-                  : null),
     );
   }
 

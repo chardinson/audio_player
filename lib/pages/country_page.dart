@@ -18,8 +18,10 @@ class CountryPage extends StatefulWidget {
 }
 
 class _CountryPageState extends State<CountryPage> {
+  final SearchBarController searchBarController = SearchBarController();
   List<Country> _countries = [];
   FetchState _fetchState = FetchState.none;
+  bool _isSearchVisible = false;
 
   set fetchState(value) {
     if (mounted) {
@@ -91,29 +93,42 @@ class _CountryPageState extends State<CountryPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: CustomAppBar(
-          onSearch: handleSearch,
-          customActions: [
-            IconButton(
-              onPressed: () => Utils.showUrlInput(context),
-              icon: const Icon(Icons.link),
-              tooltip: 'Set url',
-            ),
-            IconButton(
-              onPressed: () {
-                Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SongPage(),
-                    ));
-              },
-              icon: const Icon(Icons.library_music),
-              tooltip: 'Pick Music',
-            ),
-          ],
-        ),
-        body: body);
+    return WillPopScope(
+      onWillPop: () {
+        if (_isSearchVisible) {
+          searchBarController.toggleSearchBar();
+          setState(() => _isSearchVisible = false);
+          return Future(() => false);
+        }
+        return Future(() => true);
+      },
+      child: Scaffold(
+          appBar: CustomAppBar(
+            onSearch: handleSearch,
+            searchBarController: searchBarController,
+            onToggleSearch: (isSearchVisible) =>
+                _isSearchVisible = isSearchVisible,
+            customActions: [
+              IconButton(
+                onPressed: () => Utils.showUrlInput(context),
+                icon: const Icon(Icons.link),
+                tooltip: 'Set url',
+              ),
+              IconButton(
+                onPressed: () {
+                  Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SongPage(),
+                      ));
+                },
+                icon: const Icon(Icons.library_music),
+                tooltip: 'Pick Music',
+              ),
+            ],
+          ),
+          body: body),
+    );
   }
 
   handleSearch(String searchTerm) {

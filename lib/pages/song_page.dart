@@ -20,8 +20,10 @@ class SongPage extends StatefulWidget {
 }
 
 class _SongPageState extends State<SongPage> {
-  List<Audio> _songs = [];
   final CustomAudioPlayer _audioPlayer = CustomAudioPlayer();
+  final SearchBarController searchBarController = SearchBarController();
+  List<Audio> _songs = [];
+  bool _isSearchVisible = false;
   late StreamSubscription<Duration> _onPositionChangedSubscription;
   late StreamSubscription<PlayerState> _onPlayerStateChangedSubscription;
 
@@ -41,89 +43,102 @@ class _SongPageState extends State<SongPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: CustomAppBar(
-        onSearch: handleSearch,
-        customActions: [
-          IconButton(
-            onPressed: handlePickSongs,
-            icon: const Icon(Icons.library_add),
-            tooltip: 'Pick songs',
-          ),
-          IconButton(
-            onPressed: goToCountryPage,
-            icon: const Icon(Icons.radio),
-            tooltip: 'Radio',
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Column(
-              children: [
-                createHeader(),
-                Flexible(
-                  child: ListView.builder(
-                    itemCount: _songs.length,
-                    itemBuilder: (context, index) {
-                      final song = _songs[index];
-                      final isSelected =
-                          song.id == _audioPlayer.currentAudio?.id;
-                      return Column(
-                        children: [
-                          ListTile(
-                            leading: CircleAvatar(
-                                child: Icon(isSelected
-                                    ? Icons.play_arrow
-                                    : Icons.music_note)),
-                            onTap: () {
-                              _audioPlayer.audios = Cache.songs;
-                              if (mounted) {
-                                setState(
-                                    () => _audioPlayer.currentAudio = song);
-                              }
-                              _audioPlayer.play(DeviceFileSource(song.path));
-                            },
-                            title: Text(
-                              song.name,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                  color: isSelected
-                                      ? Theme.of(context).primaryColor
-                                      : Colors.black),
-                            ),
-                            trailing: Text(
-                              Utils.formatTime(song.duration ?? 0),
-                              style: TextStyle(
-                                  color: isSelected
-                                      ? Theme.of(context).primaryColor
-                                      : Colors.black),
-                            ),
-                          ),
-                          _songs.length - 1 == index
-                              ? const SizedBox()
-                              : const Divider(
-                                  thickness: 1, indent: 16, endIndent: 16)
-                        ],
-                      );
-                    },
-                  ),
-                ),
-              ],
+    return WillPopScope(
+      onWillPop: () {
+        if (_isSearchVisible) {
+          searchBarController.toggleSearchBar();
+          setState(() => _isSearchVisible = false);
+          return Future(() => false);
+        }
+        return Future(() => true);
+      },
+      child: Scaffold(
+        appBar: CustomAppBar(
+          onSearch: handleSearch,
+          searchBarController: searchBarController,
+          onToggleSearch: (isSearchVisible) =>
+              _isSearchVisible = isSearchVisible,
+          customActions: [
+            IconButton(
+              onPressed: handlePickSongs,
+              icon: const Icon(Icons.library_add),
+              tooltip: 'Pick songs',
             ),
-          ),
-        ],
+            IconButton(
+              onPressed: goToCountryPage,
+              icon: const Icon(Icons.radio),
+              tooltip: 'Radio',
+            ),
+          ],
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: Column(
+                children: [
+                  createHeader(),
+                  Flexible(
+                    child: ListView.builder(
+                      itemCount: _songs.length,
+                      itemBuilder: (context, index) {
+                        final song = _songs[index];
+                        final isSelected =
+                            song.id == _audioPlayer.currentAudio?.id;
+                        return Column(
+                          children: [
+                            ListTile(
+                              leading: CircleAvatar(
+                                  child: Icon(isSelected
+                                      ? Icons.play_arrow
+                                      : Icons.music_note)),
+                              onTap: () {
+                                _audioPlayer.audios = Cache.songs;
+                                if (mounted) {
+                                  setState(
+                                      () => _audioPlayer.currentAudio = song);
+                                }
+                                _audioPlayer.play(DeviceFileSource(song.path));
+                              },
+                              title: Text(
+                                song.name,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                    color: isSelected
+                                        ? Theme.of(context).primaryColor
+                                        : Colors.black),
+                              ),
+                              trailing: Text(
+                                Utils.formatTime(song.duration ?? 0),
+                                style: TextStyle(
+                                    color: isSelected
+                                        ? Theme.of(context).primaryColor
+                                        : Colors.black),
+                              ),
+                            ),
+                            _songs.length - 1 == index
+                                ? const SizedBox()
+                                : const Divider(
+                                    thickness: 1, indent: 16, endIndent: 16)
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        bottomNavigationBar: _audioPlayer.currentAudio == null
+            ? const SizedBox()
+            : CompactPlayerController(
+                onTap: _audioPlayer.isUrlSource
+                    ? null
+                    : () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const PlayerPage()))),
       ),
-      bottomNavigationBar: _audioPlayer.currentAudio == null
-          ? const SizedBox()
-          : CompactPlayerController(
-              onTap: _audioPlayer.isUrlSource
-                  ? null
-                  : () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const PlayerPage()))),
     );
   }
 
