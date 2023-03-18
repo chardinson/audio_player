@@ -56,7 +56,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                       onPressed: _controller.clear,
                       icon: const Icon(Icons.clear))),
             )
-          : const Text('Audio APP'),
+          : const Text('RocanLovers'),
       leading: _showBackButton
           ? IconButton(
               onPressed: _goBack,
