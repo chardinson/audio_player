@@ -2,7 +2,7 @@
     package="com.example.audio_player">
     <uses-permission android:name="android.permission.INTERNET" />
     <application
-        android:label="audio_player"
+        android:label="RocanLovers"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
