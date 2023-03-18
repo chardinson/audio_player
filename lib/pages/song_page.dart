@@ -26,11 +26,14 @@ class _SongPageState extends State<SongPage> {
   bool _isSearchVisible = false;
   late StreamSubscription<Duration> _onPositionChangedSubscription;
   late StreamSubscription<PlayerState> _onPlayerStateChangedSubscription;
+  late StreamSubscription<Audio> _onAudioSkippedSubscription;
 
   @override
   void initState() {
     super.initState();
     _songs = [...Cache.songs];
+    _onAudioSkippedSubscription =
+        _audioPlayer.onAudioSkipped.listen((_) => setState(() {}));
     _onPositionChangedSubscription =
         _audioPlayer.onPositionChanged.listen((duration) {
       setState(() {});
@@ -145,6 +148,7 @@ class _SongPageState extends State<SongPage> {
   @override
   void dispose() {
     super.dispose();
+    _onAudioSkippedSubscription.cancel();
     _onPlayerStateChangedSubscription.cancel();
     _onPositionChangedSubscription.cancel();
   }

@@ -12,6 +12,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 import '../api.dart';
 import '../global_enums.dart';
+import '../models/audio.dart';
 import '../models/station.dart';
 
 class StationPage extends StatefulWidget {
@@ -25,6 +26,7 @@ class StationPage extends StatefulWidget {
 class _StationPageState extends State<StationPage> {
   final CustomAudioPlayer _audioPlayer = CustomAudioPlayer();
   final SearchBarController searchBarController = SearchBarController();
+  late StreamSubscription<Audio> _onAudioSkippedSubscription;
   late StreamSubscription<PlayerState> _onPlayerStateChangedSubscription;
   List<Station> _stations = [];
   FetchState _fetchState = FetchState.none;
@@ -108,6 +110,8 @@ class _StationPageState extends State<StationPage> {
     super.initState();
     fetchStations();
 
+    _onAudioSkippedSubscription =
+        _audioPlayer.onAudioSkipped.listen((_) => setState(() {}));
     _onPlayerStateChangedSubscription =
         _audioPlayer.onPlayerStateChanged.listen((_) {
       setState(() {});
@@ -157,6 +161,7 @@ class _StationPageState extends State<StationPage> {
   @override
   void dispose() {
     super.dispose();
+    _onAudioSkippedSubscription.cancel();
     _onPlayerStateChangedSubscription.cancel();
   }
 
