@@ -176,7 +176,7 @@ class _SongPageState extends State<SongPage> {
 
   handleSearch(String searchTerm) {
     setState(() {
-      _songs =_audioPlayer.isUrlSource ? [] : _audioPlayer.audios
+      _songs = [...Cache.songs]
           .where((audio) =>
               RegExp(searchTerm, caseSensitive: false).hasMatch(audio.name))
           .toList();
