@@ -3,8 +3,8 @@ import 'dart:math';
 
 import 'package:audioplayers/audioplayers.dart';
 
-import 'global_enums.dart';
-import 'models/audio.dart';
+import 'fetch_state.dart';
+import '../models/audio.dart';
 
 class CustomAudioPlayer extends AudioPlayer {
   static final CustomAudioPlayer _instance = CustomAudioPlayer._internal();

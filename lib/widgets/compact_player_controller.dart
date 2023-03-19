@@ -1,12 +1,12 @@
 import 'dart:async';
 
-import 'package:audio_player/custom_audio_player.dart';
+import 'package:audio_player/helpers/custom_audio_player.dart';
 import 'package:audio_player/models/audio.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
-import '../global_enums.dart';
+import '../helpers/fetch_state.dart';
 
 class CompactPlayerController extends StatefulWidget {
   const CompactPlayerController({super.key, this.onTap});

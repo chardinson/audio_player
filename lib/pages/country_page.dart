@@ -1,12 +1,12 @@
-import 'package:audio_player/api.dart';
+import 'package:audio_player/helpers/radio_browser_api.dart';
 import 'package:audio_player/pages/station_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
-import '../global_enums.dart';
+import '../helpers/fetch_state.dart';
 import '../models/cache.dart';
 import '../models/country.dart';
-import '../utils.dart';
+import '../helpers/utils.dart';
 import '../widgets/custom_app_bar.dart';
 import 'song_page.dart';
 

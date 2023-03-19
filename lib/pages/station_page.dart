@@ -1,17 +1,17 @@
 import 'dart:async';
 
-import 'package:audio_player/custom_audio_player.dart';
+import 'package:audio_player/helpers/custom_audio_player.dart';
 import 'package:audio_player/models/cache.dart';
 import 'package:audio_player/pages/radio_player_page.dart';
-import 'package:audio_player/utils.dart';
+import 'package:audio_player/helpers/utils.dart';
 import 'package:audio_player/widgets/compact_player_controller.dart';
 import 'package:audio_player/widgets/custom_app_bar.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
-import '../api.dart';
-import '../global_enums.dart';
+import '../helpers/radio_browser_api.dart';
+import '../helpers/fetch_state.dart';
 import '../models/audio.dart';
 import '../models/station.dart';
 

@@ -4,13 +4,13 @@ import 'package:audio_player/models/audio.dart';
 import 'package:audio_player/models/cache.dart';
 import 'package:audio_player/pages/country_page.dart';
 import 'package:audio_player/pages/player_page.dart';
-import 'package:audio_player/utils.dart';
+import 'package:audio_player/helpers/utils.dart';
 import 'package:audio_player/widgets/compact_player_controller.dart';
 import 'package:audio_player/widgets/custom_app_bar.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
-import '../custom_audio_player.dart';
+import '../helpers/custom_audio_player.dart';
 
 class SongPage extends StatefulWidget {
   const SongPage({super.key});

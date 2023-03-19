@@ -5,8 +5,8 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:marquee/marquee.dart';
 
-import '../custom_audio_player.dart';
-import '../utils.dart';
+import '../helpers/custom_audio_player.dart';
+import '../helpers/utils.dart';
 
 class PlayerPage extends StatefulWidget {
   const PlayerPage({super.key});

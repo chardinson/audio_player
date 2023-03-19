@@ -7,8 +7,8 @@ import 'package:marquee/marquee.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../custom_audio_player.dart';
-import '../global_enums.dart';
+import '../helpers/custom_audio_player.dart';
+import '../helpers/fetch_state.dart';
 import '../models/station.dart';
 
 class RadioPlayerPage extends StatefulWidget {

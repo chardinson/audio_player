@@ -2,17 +2,18 @@ import 'dart:convert';
 
 import 'package:http/http.dart';
 
-import 'models/cache.dart';
-import 'models/country.dart';
-import 'models/station.dart';
+import '../models/cache.dart';
+import '../models/country.dart';
+import '../models/station.dart';
 
 class Api {
   static final _client = Client();
+  static const _radioBrowserDomain = 'de1.api.radio-browser.info';
 
   static Future<List<Country>> getCountries() async {
     late List<Country> countries = Cache.countries;
     if (Cache.countries.isEmpty) {
-      Uri uri = Uri.https('de1.api.radio-browser.info', 'json/countries');
+      Uri uri = Uri.https(_radioBrowserDomain, 'json/countries');
       final response = await _client.get(uri);
 
       countries = jsonDecode(response.body).map<Country>((e) {
@@ -33,7 +34,7 @@ class Api {
     if (Cache.stations.containsKey(isoCode)) {
       stations = Cache.stations[isoCode]!;
     } else {
-      Uri uri = Uri.https('de1.api.radio-browser.info',
+      Uri uri = Uri.https(_radioBrowserDomain,
           'json/stations/bycountrycodeexact/$isoCode');
       final response = await _client.get(uri);
 

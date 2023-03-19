@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
 import 'custom_audio_player.dart';
-import 'models/song.dart';
+import '../models/song.dart';
 
 class Utils {
   static final AudioPlayer audioPlayer =
