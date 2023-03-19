@@ -33,33 +33,36 @@ class _CountryPageState extends State<CountryPage> {
   get fetchState => _fetchState;
 
   get body {
-    Widget body = ListView.builder(
-      shrinkWrap: true,
-      itemCount: _countries.length,
-      itemBuilder: (context, index) {
-        Country country = _countries[index];
-        return Column(
-          children: [
-            ListTile(
-              leading: CircleAvatar(
-                  child: Image.asset(
-                country.imageUrl!,
-                errorBuilder: (context, error, stackTrace) =>
-                    const Icon(Icons.broken_image),
-              )),
-              title: Text(country.name),
-              onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => StationPage(country.isoCode),
-                  )),
-            ),
-            _countries.length - 1 == index
-                ? const SizedBox()
-                : const Divider(thickness: 1, indent: 16, endIndent: 16)
-          ],
-        );
-      },
+    Widget body = RefreshIndicator(
+      onRefresh: () => fetchCountries(true),
+      child: ListView.builder(
+        shrinkWrap: true,
+        itemCount: _countries.length,
+        itemBuilder: (context, index) {
+          Country country = _countries[index];
+          return Column(
+            children: [
+              ListTile(
+                leading: CircleAvatar(
+                    child: Image.asset(
+                  country.imageUrl!,
+                  errorBuilder: (context, error, stackTrace) =>
+                      const Icon(Icons.broken_image),
+                )),
+                title: Text(country.name),
+                onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => StationPage(country.isoCode),
+                    )),
+              ),
+              _countries.length - 1 == index
+                  ? const SizedBox()
+                  : const Divider(thickness: 1, indent: 16, endIndent: 16)
+            ],
+          );
+        },
+      ),
     );
     if (_fetchState == FetchState.loading) {
       body = Center(
@@ -139,14 +142,14 @@ class _CountryPageState extends State<CountryPage> {
     setState(() => _countries = countries);
   }
 
-  Future<void> fetchCountries() async {
+  Future<void> fetchCountries([bool reload = false]) async {
     FetchState previousFetchState = fetchState;
     try {
       fetchState = FetchState.loading;
       if (previousFetchState == FetchState.error) {
         await Future.delayed(const Duration(seconds: 1));
       }
-      _countries = await Api.getCountries();
+      _countries = await Api.getCountries(reload);
       fetchState = FetchState.success;
     } catch (e) {
       fetchState = FetchState.error;

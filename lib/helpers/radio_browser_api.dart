@@ -10,9 +10,9 @@ class Api {
   static final _client = Client();
   static const _radioBrowserDomain = 'de1.api.radio-browser.info';
 
-  static Future<List<Country>> getCountries() async {
+  static Future<List<Country>> getCountries([bool reload = false]) async {
     late List<Country> countries = Cache.countries;
-    if (Cache.countries.isEmpty) {
+    if (reload || Cache.countries.isEmpty) {
       Uri uri = Uri.https(_radioBrowserDomain, 'json/countries');
       final response = await _client.get(uri);
 
@@ -28,10 +28,11 @@ class Api {
     return [...countries];
   }
 
-  static Future<List<Station>> getStations(String countryIsoCode) async {
+  static Future<List<Station>> getStations(String countryIsoCode,
+      [bool reload = false]) async {
     final isoCode = countryIsoCode;
     List<Station> stations = [];
-    if (Cache.stations.containsKey(isoCode)) {
+    if (!reload && Cache.stations.containsKey(isoCode)) {
       stations = Cache.stations[isoCode]!;
     } else {
       Uri uri = Uri.https(

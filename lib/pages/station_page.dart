@@ -42,44 +42,47 @@ class _StationPageState extends State<StationPage> {
   get fetchState => _fetchState;
 
   get body {
-    Widget body = ListView.builder(
-      itemCount: _stations.length,
-      itemBuilder: (context, index) {
-        Station station = _stations[index];
-        final isSelected = station.id == _audioPlayer.currentAudio?.id;
-        return Column(
-          children: [
-            ListTile(
-              leading: CircleAvatar(
-                  child: isSelected
-                      ? const Icon(Icons.play_arrow)
-                      : Image.network(
-                          station.thumbnail!,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const Icon(Icons.radio),
-                        )),
-              title: Text(station.name,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                      color: isSelected
-                          ? Theme.of(context).primaryColor
-                          : Colors.black)),
-              subtitle: Text(station.state,
-                  style: TextStyle(
-                      color: isSelected
-                          ? Theme.of(context).primaryColor
-                          : Colors.black)),
-              onTap: () {
-                _audioPlayer.audios = _stations;
-                setState(() {
-                  _audioPlayer.currentAudio = station;
-                });
-                _audioPlayer.play(UrlSource(station.path));
-              },
-            ),
-          ],
-        );
-      },
+    Widget body = RefreshIndicator(
+      onRefresh: () => fetchStations(true),
+      child: ListView.builder(
+        itemCount: _stations.length,
+        itemBuilder: (context, index) {
+          Station station = _stations[index];
+          final isSelected = station.id == _audioPlayer.currentAudio?.id;
+          return Column(
+            children: [
+              ListTile(
+                leading: CircleAvatar(
+                    child: isSelected
+                        ? const Icon(Icons.play_arrow)
+                        : Image.network(
+                            station.thumbnail!,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(Icons.radio),
+                          )),
+                title: Text(station.name,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        color: isSelected
+                            ? Theme.of(context).primaryColor
+                            : Colors.black)),
+                subtitle: Text(station.state,
+                    style: TextStyle(
+                        color: isSelected
+                            ? Theme.of(context).primaryColor
+                            : Colors.black)),
+                onTap: () {
+                  _audioPlayer.audios = _stations;
+                  setState(() {
+                    _audioPlayer.currentAudio = station;
+                  });
+                  _audioPlayer.play(UrlSource(station.path));
+                },
+              ),
+            ],
+          );
+        },
+      ),
     );
     if (_fetchState == FetchState.loading) {
       body = Center(
@@ -175,14 +178,14 @@ class _StationPageState extends State<StationPage> {
     });
   }
 
-  void fetchStations() async {
+  Future<void> fetchStations([bool reload = false]) async {
     FetchState previousFetchState = fetchState;
     try {
       fetchState = FetchState.loading;
       if (previousFetchState == FetchState.error) {
         await Future.delayed(const Duration(seconds: 1));
       }
-      _stations = await Api.getStations(widget.countryIsoCode);
+      _stations = await Api.getStations(widget.countryIsoCode, reload);
       fetchState = FetchState.success;
     } catch (e) {
       fetchState = FetchState.error;
