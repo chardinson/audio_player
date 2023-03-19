@@ -78,10 +78,12 @@ class _RadioPlayerPageState extends State<RadioPlayerPage> {
                                 FilledButton(
                                   onPressed: () async {
                                     String url =
-                                        _audioPlayer.currentAudio!.path;
+                                        _audioPlayer.currentAudio?.homePage! ??
+                                            _audioPlayer.currentAudio!.path;
                                     final uri = Uri.parse(url);
                                     if (await canLaunchUrl(uri)) {
-                                      await launchUrl(uri);
+                                      launchUrl(uri)
+                                          .then((_) => Navigator.pop(context));
                                     } else {
                                       throw 'Could not launch $url';
                                     }
