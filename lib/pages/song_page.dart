@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:audio_player/models/audio.dart';
-import 'package:audio_player/models/cache.dart';
+import 'package:audio_player/helpers/cache.dart';
 import 'package:audio_player/pages/country_page.dart';
 import 'package:audio_player/pages/player_page.dart';
 import 'package:audio_player/helpers/utils.dart';

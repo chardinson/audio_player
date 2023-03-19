@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 import '../enums/fetch_state.dart';
-import '../models/cache.dart';
+import '../helpers/cache.dart';
 import '../models/country.dart';
 import '../helpers/utils.dart';
 import '../widgets/custom_app_bar.dart';

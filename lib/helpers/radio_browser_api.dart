@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart';
 
-import '../models/cache.dart';
+import 'cache.dart';
 import '../models/country.dart';
 import '../models/station.dart';
 
@@ -34,8 +34,8 @@ class Api {
     if (Cache.stations.containsKey(isoCode)) {
       stations = Cache.stations[isoCode]!;
     } else {
-      Uri uri = Uri.https(_radioBrowserDomain,
-          'json/stations/bycountrycodeexact/$isoCode');
+      Uri uri = Uri.https(
+          _radioBrowserDomain, 'json/stations/bycountrycodeexact/$isoCode');
       final response = await _client.get(uri);
 
       stations = jsonDecode(response.body)

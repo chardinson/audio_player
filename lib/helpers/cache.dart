@@ -1,7 +1,7 @@
 import 'package:audio_player/models/song.dart';
 import 'package:audio_player/models/station.dart';
 
-import 'country.dart';
+import '../models/country.dart';
 
 class Cache {
   static List<Country> countries = [];

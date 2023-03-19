@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:audio_player/helpers/custom_audio_player.dart';
-import 'package:audio_player/models/cache.dart';
+import 'package:audio_player/helpers/cache.dart';
 import 'package:audio_player/pages/radio_player_page.dart';
 import 'package:audio_player/helpers/utils.dart';
 import 'package:audio_player/widgets/compact_player_controller.dart';
