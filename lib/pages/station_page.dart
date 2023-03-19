@@ -167,7 +167,7 @@ class _StationPageState extends State<StationPage> {
 
   handleSearch(String searchTerm) {
     setState(() {
-      _stations = Cache.stations[widget.countryIsoCode]!
+      _stations = _audioPlayer.isUrlSource ? Cache.stations[widget.countryIsoCode]! : <Station>[]
           .where((station) =>
               RegExp(searchTerm, caseSensitive: false).hasMatch(station.name) ||
               RegExp(searchTerm, caseSensitive: false).hasMatch(station.state))
