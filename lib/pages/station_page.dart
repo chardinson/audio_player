@@ -11,7 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 import '../helpers/radio_browser_api.dart';
-import '../helpers/fetch_state.dart';
+import '../enums/fetch_state.dart';
 import '../models/audio.dart';
 import '../models/station.dart';
 

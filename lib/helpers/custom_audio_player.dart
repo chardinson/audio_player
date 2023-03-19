@@ -3,7 +3,8 @@ import 'dart:math';
 
 import 'package:audioplayers/audioplayers.dart';
 
-import 'fetch_state.dart';
+import '../enums/fetch_state.dart';
+import '../enums/loop_mode.dart';
 import '../models/audio.dart';
 
 class CustomAudioPlayer extends AudioPlayer {
@@ -144,5 +145,3 @@ class CustomAudioPlayer extends AudioPlayer {
     return isShuffleEnabled = !isShuffleEnabled;
   }
 }
-
-enum LoopMode { off, one, all }

@@ -3,7 +3,7 @@ import 'package:audio_player/pages/station_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
-import '../helpers/fetch_state.dart';
+import '../enums/fetch_state.dart';
 import '../models/cache.dart';
 import '../models/country.dart';
 import '../helpers/utils.dart';

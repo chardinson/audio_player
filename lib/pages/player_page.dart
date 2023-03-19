@@ -5,6 +5,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:marquee/marquee.dart';
 
+import '../enums/loop_mode.dart';
 import '../helpers/custom_audio_player.dart';
 import '../helpers/utils.dart';
 
