@@ -159,7 +159,7 @@ class _SongPageState extends State<SongPage> {
       child: Container(
         padding: const EdgeInsets.all(16.0),
         child: Text(
-          '${_songs.length} canciones agregadas',
+          '${Cache.songs.length} canciones agregadas',
         ),
       ),
     );
